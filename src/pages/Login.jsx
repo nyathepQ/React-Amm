@@ -90,37 +90,34 @@ function Login() {
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         //logica
+        try {
+            const response = await axios.post('http://localhost:3001/login', {user, pass});
 
-        axios.post('http://localhost:3001/login', { user, pass })
-            .then(response => {
-                if(response && response.data){
-                    //si el login es exitoso
-                    setMensaje(response.data.mensaje);
-                    setError('');
+            if(response && response.data){
+                setMensaje(response.data.mensaje);
+                setError('');
 
-                    //redirigir a la pagina inicio
-                    setUserContext(response.data.user);
-                    navigate('/inicio');
-                } else {
-                    //si la respuesta no tiene la propuedad 'data'
-                    console.error('Respuesta inesperada: ', response);
-                    setError('Respuesta inesperada del servidor')
-                    setMensaje('');
-                }                
-            })
-            .catch(error => {
-                //manejo de errores si la respuesta tiene un error
-                if(error.response && error.response.data){
-                    setError(error.response.data.mensaje);
-                } else {
-                    console.error(error);
-                    setError('Hubo un error al realizar el login');
-                }                
-                setMensaje('');
-            });
+                //guardar usuario en UserContext
+                setUserContext(response.data.user);
+
+                //guardar usuario en localStorage
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                //redirigir
+                navigate('/Inicio');
+            }
+        } catch (error) {
+            if (error.response && error.response.data) {
+                setError(error.response.data.mensaje);
+            } else {
+                console.error(error);
+                setError('Hubo un error al realizar el inicio de sesión');
+            }
+            setMensaje('');
+        }
     };
 
     return (<>  

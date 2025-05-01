@@ -32,6 +32,7 @@ const GlobalStyles = createGlobalStyle`
             background-color: #A8B8FF;
             color: black;
             border: 1px solid white;
+            cursor: pointer;
         }
     }
 
@@ -106,6 +107,10 @@ const GlobalStyles = createGlobalStyle`
         text-align: right;
         padding-right: 10px;
         align-self: center;
+    }
+
+    .observaciones {
+        height: 150px;
     }
 `;
 
