@@ -10,12 +10,12 @@ import GlobalStyles from '../styles/GlobalStyles';
 import ModalTable from '../components/ModalTable';
 
 const Mensaje = styled.p`
-    color: ${props => (props.tipo === 'error' ? 'darkred' : 'black')}
+    color: ${props => (props.tipo === 'error' ? 'violet' : 'black')};
     text-align: center;
     border: 2px solid ${props => (props.tipo === 'error' ? 'white' : 'black')};
     padding: 10px;
     border-radius: 5px;
-    background-color: ${props => (props.tipo == 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
+    background-color: ${props => (props.tipo === 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
 `;
 
 const PagesDiv = styled.div`
@@ -80,7 +80,7 @@ function Equipos() {
         if(botonPress === 'buscar') {
             if(idSeleccionado !== "NA"){
                 const equipoEnc = equipos.find(equipo => equipo.id_equipo === parseInt(idSeleccionado));
-                const miembros = usuariosEquipo.filter(empleados => empleados.id_equipo == parseInt(idSeleccionado));
+                const miembros = usuariosEquipo.filter(empleados => empleados.id_equipo === parseInt(idSeleccionado));
                 
                 if(equipoEnc) {
                     setNuevoEquipo({
@@ -104,6 +104,10 @@ function Equipos() {
                     modificado_el: modFecha
                 };
 
+                if(datosActualizados.nombre_equipo === '') {
+                    return setMensaje('Nombre de equipo no puede estar vacio');
+                };
+
                 const response = await axios.post('http://localhost:3001/equipos/update', datosActualizados);
                 if (response.data.mensaje) {
                     setMensaje(response.data.mensaje);
@@ -116,6 +120,10 @@ function Equipos() {
                 const datosActualizados = {
                     ...nuevoEquipo,
                     user_crea: user.nombre_usuario
+                };
+
+                if(datosActualizados.nombre_equipo === '') {
+                    return setMensaje('Nombre de equipo no puede estar vacio');
                 };
 
                 const response = await axios.post('http://localhost:3001/equipos/insert', datosActualizados);
@@ -134,7 +142,7 @@ function Equipos() {
                 const obtenerUsuario = (rol) => {
                     const usuariosEquipo = miembros.find(m => m.rol === rol);
                     if (!usuariosEquipo || usuariosEquipo.id_usuario === 'NA') return {id: null, nombre: 'No asignado'};
-                    const usuario = usuario.find(u => u.id_usuario === usuariosEquipo.id_usuario);
+                    const usuario = empleados.find(u => u.id_usuario === usuariosEquipo.id_usuario);
                     const nombreCompleto = usuario ? `${usuario.nombres} ${usuario.apellidos}` : 'No encontrado';
 
                     return { id: usuariosEquipo.id_usuario, nombre: nombreCompleto };
@@ -253,10 +261,10 @@ function Equipos() {
                     datos={datosModal}
                     columnas={[
                         {label: 'Código', field:'id_equipo'}, 
-                        {label: 'Nombre equipo', field: 'nombre_equpo'},
+                        {label: 'Nombre equipo', field: 'nombre_equipo'},
                         {label: 'Lider', field: 'lider_nombre'},
-                        {label: 'Miembro', field: 'miembro1_nombre'},
-                        {label: 'Miembro', field: 'miembro2_nombre'},
+                        {label: 'Miembro 1', field: 'miembro1_nombre'},
+                        {label: 'Miembro 2', field: 'miembro2_nombre'},
                         {label: 'Creador', field: 'user_crea'},
                         {label: 'Fecha creación', field: 'creado_el'},
                         {label: 'Modificador', field: 'user_modifica'},

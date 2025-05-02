@@ -71,8 +71,12 @@ const FooterLogin = styled.footer`
 `;
 
 const Mensaje = styled.p`
-    color: ${props => (props.tipo === 'error' ? 'darkred' : 'black')}
+    color: ${props => (props.tipo === 'error' ? 'violet' : 'black')};
     text-align: center;
+    border: 2px solid ${props => (props.tipo === 'error' ? 'white' : 'black')};
+    padding: 10px;
+    border-radius: 5px;
+    background-color: ${props => (props.tipo === 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
 `;
 
 const IconLink = styled.a`
@@ -85,27 +89,24 @@ function Login() {
     const navigate = useNavigate();
     document.title = "Login | AMM";
     const { setUser: setUserContext } = useUser();
-    const [user, setUser] = useState('');
+    const [username, setUserName] = useState('');
     const [pass, setPass] = useState('');
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
+        setMensaje('');
         //logica
         try {
-            const response = await axios.post('http://localhost:3001/login', {user, pass});
+            const response = await axios.post('http://localhost:3001/login', {user: username, pass});
 
             if(response && response.data){
                 setMensaje(response.data.mensaje);
-                setError('');
 
                 //guardar usuario en UserContext
                 setUserContext(response.data.user);
-
-                //guardar usuario en localStorage
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-
                 //redirigir
                 navigate('/Inicio');
             }
@@ -116,7 +117,6 @@ function Login() {
                 console.error(error);
                 setError('Hubo un error al realizar el inicio de sesión');
             }
-            setMensaje('');
         }
     };
 
@@ -124,7 +124,7 @@ function Login() {
         <GlobalStyles/>
         <MainLogin>
             <HeaderQuestion>
-                <a href="https://wa.me/573212300716" target="_blank">
+                <a href="https://wa.me/573212300716" target="_blank" rel="noopener noreferrer">
                     <i className="fa-solid fa-circle-question fa-3x" style={{color: "black"}}></i>
                 </a>
             </HeaderQuestion>
@@ -132,13 +132,16 @@ function Login() {
                 <LoginLogo src={logo} alt="Logo ALF" />
             </DivLoginLogo>
             <div>
+                {/* Mensajes */}
+                {error && <Mensaje tipo="error">{error}</Mensaje>}
+                {mensaje && <Mensaje tipo="mensaje">{mensaje}</Mensaje>}
                 <LoginForm onSubmit={handleLogin}>
                     <i className="fa-solid fa-user fa-2x"></i>
                     <input
                         type="text"
-                        value={user}
+                        value={username}
                         placeholder="Usuario"
-                        onChange={(e)=> setUser(e.target.value)}
+                        onChange={(e)=> setUserName(e.target.value)}
                         required
                     />
                     <i className="fa-solid fa-lock fa-2x"></i>
@@ -149,19 +152,15 @@ function Login() {
                         onChange={(e)=> setPass(e.target.value)}
                         required
                     />
-
-                    <button type="submit">Ingresar</button>
-                    {/* Mensajes */}
-                    {error && <Mensaje tipo="error">{error}</Mensaje>}
-                    {mensaje && <Mensaje tipo="mensaje">{mensaje}</Mensaje>}
+                    <button type="submit">Ingresar</button>                    
                 </LoginForm>
             </div>
         </MainLogin>
         <FooterLogin>
-            <IconLink href="https://www.facebook.com/AlfprofessionalC" target="_blank">
+            <IconLink href="https://www.facebook.com/AlfprofessionalC" target="_blank" rel="noopener noreferrer">
                 <i className="fa-brands fa-instagram fa-5x"></i>
             </IconLink>
-            <IconLink href="https://www.instagram.com/alfprofessionalcleaning/" target="_blank">
+            <IconLink href="https://www.instagram.com/alfprofessionalcleaning/" target="_blank" rel="noopener noreferrer">
                 <i className="fa-brands fa-facebook fa-5x"></i>
             </IconLink>
         </FooterLogin>

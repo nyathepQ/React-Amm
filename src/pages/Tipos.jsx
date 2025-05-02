@@ -25,12 +25,12 @@ const FormTipoUsuario = styled.div`
 `;
 
 const Mensaje = styled.p`
-    color: ${props => (props.tipo === 'error' ? 'darkred' : 'black')}
+    color: ${props => (props.tipo === 'error' ? 'violet' : 'black')};
     text-align: center;
     border: 2px solid ${props => (props.tipo === 'error' ? 'white' : 'black')};
     padding: 10px;
     border-radius: 5px;
-    background-color: ${props => (props.tipo == 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
+    background-color: ${props => (props.tipo === 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
 `;
 
 function Tipos() {
@@ -107,6 +107,11 @@ function Tipos() {
                     modificado_el: modFecha
                 };
 
+                // -- Varificar que ningun campo necesario este vacio --
+                if(datosActualizados.nombre_tipo === ''){
+                    return setError('El campo nombre no puede estar vacio');
+                };
+
                 const response = await axios.post('http://localhost:3001/tipos/documento/update', datosActualizados);
                 if (response.data.mensaje) {
                     setMensaje(response.data.mensaje);
@@ -116,10 +121,17 @@ function Tipos() {
                 }
             } else {    
                 //crear
+
+                // -- Varificar que ningun campo necesario este vacio --
+                if(nuevoDoc.nombre_tipo === ''){
+                    return setError('El campo nombre no puede estar vacio');
+                };                
+
                 const response = await axios.post('http://localhost:3001/tipos/documento/insert', {
                     nombre_tipo: nuevoDoc.nombre_tipo,
                     user_crea: user.nombre_usuario
                 });
+                
                 if (response.data.mensaje) {
                     setMensaje(response.data.mensaje);
                     cargarDatos(); //volver a cargar datos para actualizar
@@ -184,6 +196,11 @@ function Tipos() {
                     modificado_el: modFecha
                 };
 
+                // -- Varificar que ningun campo necesario este vacio --
+                if(datosActualizados.nombre_tipo === ''){
+                    return setError('El campo nombre no puede estar vacio');
+                };
+
                 const response = await axios.post('http://localhost:3001/tipos/limpieza/update', datosActualizados);
                 if (response.data.mensaje) {
                     setMensaje(response.data.mensaje);
@@ -193,6 +210,12 @@ function Tipos() {
                 }
             } else {    
                 //crear
+
+                // -- Varificar que ningun campo necesario este vacio --
+                if(nuevaLimp.nombre_tipo === ''){
+                    return setError('El campo nombre no puede estar vacio');
+                };
+
                 const response = await axios.post('http://localhost:3001/tipos/limpieza/insert', {
                     nombre_tipo: nuevaLimp.nombre_tipo,
                     user_crea: user.nombre_usuario

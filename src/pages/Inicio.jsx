@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../components/UserContext';
 import Header from '../components/Header';
 import styled from 'styled-components';
 import GlobalStyles from '../styles/GlobalStyles';

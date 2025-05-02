@@ -491,10 +491,11 @@ app.post('/usuarios/delete', (req, res) => {
             return res.status(500).json({error: 'Error en la base de datos'})
         }
         if(result.affectedRows == 0){
+            console.log(typeof(id_usuario));
             return res.status(404).json({mensaje: 'Usuario no encontrado'})
         }
 
-        return res.status(200).json({mensaje: 'Usuario con código ' + id_cliente + ' eliminado'});
+        return res.status(200).json({mensaje: 'Usuario con código ' + id_usuario + ' eliminado'});
     });
 });
 
@@ -518,7 +519,7 @@ app.get('/servicios/fecha', (req, res) => {
 });
 
 // -- Obtener registros por fecha y equipo --
-app.get('/servicios/equipofecha', (req, res) => {
+app.post('/servicios/equipofecha', (req, res) => {
     const { fecha, id_equipo } = req.body;
     const query = 'SELECT * FROM servicio WHERE fecha = ? AND id_equipo = ?';
     db.query(query, [fecha, id_equipo] , (err, results) => {

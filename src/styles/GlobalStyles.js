@@ -108,10 +108,6 @@ const GlobalStyles = createGlobalStyle`
         padding-right: 10px;
         align-self: center;
     }
-
-    .observaciones {
-        height: 150px;
-    }
 `;
 
 

@@ -10,12 +10,12 @@ import GlobalStyles from '../styles/GlobalStyles';
 import ModalTable from '../components/ModalTable';
 
 const Mensaje = styled.p`
-    color: ${props => (props.tipo === 'error' ? 'darkred' : 'black')}
+    color: ${props => (props.tipo === 'error' ? 'violet' : 'black')};
     text-align: center;
     border: 2px solid ${props => (props.tipo === 'error' ? 'white' : 'black')};
     padding: 10px;
     border-radius: 5px;
-    background-color: ${props => (props.tipo == 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
+    background-color: ${props => (props.tipo === 'mensaje' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)')};
 `;
 
 const PagesDiv = styled.div`
@@ -70,6 +70,21 @@ function Empleados() {
         }
     }
 
+    const createdId = (formulario) => { //función para crear id personalizado
+        if(formulario.id_tipoUsua.value === 'NA' || formulario.nombres.value === '' || formulario.apellidos.value === ''){
+            return '';
+        }
+
+        const tipoUs = tiposUsuario.find(us => us.id_tipoUsua === parseInt(formulario.id_tipoUsua.value));
+        
+        const tpU = tipoUs.nombre_tipo.substring(0, 3).toUpperCase();
+        const nomb = formulario.nombres.value.substring(0, 2).toUpperCase();
+        const apell = formulario.apellidos.value.substring(0, 2).toUpperCase();
+        const aleatoriNumb = Math.floor(100000 + Math.random() * 900000);
+
+        return `${tpU}${nomb}${apell}${aleatoriNumb}`;
+    }
+
     const handleUsuario = async (e) => {
         e.preventDefault();
         setMensaje('');
@@ -113,28 +128,47 @@ function Empleados() {
                     modificado_el: modFecha
                 };
 
-                const response = await axios.post('http://localhost:3001/usuarios/update', datosActualizados);
-                if (response.data.mensaje) {
-                    setMensaje(response.data.mensaje);
-                    cargarDatos(); //volver a cargar datos para actualizar                    
-                } else if (response.data.error) {
-                    setError(response.data.error);
+                // -- Varificar que ningun campo necesario este vacio --
+                const camposExcluidos = ['user_crea'];
+                const camposVacios = Object.entries(datosActualizados).filter(([clave, valor]) => !camposExcluidos.includes(clave) && (valor === '' || valor === 'NA'));
+
+                console.log(camposVacios.map(([clave]) => clave));
+                if(camposVacios.length > 0) {
+                    setError(`Faltan datos válidos en uno o varios campos`);
+                } else {
+                    const response = await axios.post('http://localhost:3001/usuarios/update', datosActualizados);
+                    if (response.data.mensaje) {
+                        setMensaje(response.data.mensaje);
+                        cargarDatos(); //volver a cargar datos para actualizar                    
+                    } else if (response.data.error) {
+                        setError(response.data.error);
+                    }
                 }
             } else {    
                 //crear
                 const datosActualizados = {
                     ...nuevoUsuario,
+                    id_usuario: createdId(form),
                     user_crea: user.nombre_usuario
                 };
 
-                const response = await axios.post('http://localhost:3001/usuarios/insert', datosActualizados);
-                if (response.data.mensaje) {
-                    setMensaje(response.data.mensaje);
-                    cargarDatos(); //volver a cargar datos para actualizar
-                    setNuevoUsuario(prev => ({ ...prev, id_usuario: response.data.id}));
-                } else if (response.data.error) {
-                    setError(response.data.error);
-                }
+                // -- Varificar que ningun campo necesario este vacio --
+                const camposExcluidos = ['id_usuario', 'user_modifica', 'modificado_el'];
+                const camposVacios = Object.entries(datosActualizados).filter(([clave, valor]) => !camposExcluidos.includes(clave) && (valor === '' || valor === 'NA'));
+
+                console.log(camposVacios.map(([clave]) => clave));
+                if(camposVacios.length > 0) {
+                    setError(`Faltan datos válidos en uno o varios campos`);
+                } else {
+                    const response = await axios.post('http://localhost:3001/usuarios/insert', datosActualizados);
+                    if (response.data.mensaje) {
+                        setMensaje(response.data.mensaje);
+                        cargarDatos(); //volver a cargar datos para actualizar
+                        setNuevoUsuario(prev => ({ ...prev, id_usuario: response.data.id}));
+                    } else if (response.data.error) {
+                        setError(response.data.error);
+                    }
+                }                
             }
         } else if (botonPress === 'mostrar') {
             const datosCompletos = usuarios.filter(us => us.id_usuario !== 'NA').map(us => {
@@ -265,7 +299,7 @@ function Empleados() {
                         />
                         <label htmlFor="correo_usuario">Correo electronico</label>
                         <input
-                            type="text"
+                            type="email"
                             name="correo_usuario"
                             id="correo_usuario"
                             value={nuevoUsuario.correo_usuario}

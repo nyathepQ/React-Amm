@@ -18,9 +18,36 @@ export function getFechaEquipo() {
     //comprobar si la hora es igual o mayor a las 8 pm
     if(ahora.getHours() > 19) {
         ahora.setDate(ahora.getDate() + 1); //sumar un día
-        const fecha = ahora.toISOString().split('T')[0]; //transformar a Date de mysql
+        const fecha = ahora.toLocaleDateString('en-CA'); //transformar a Date de mysql
         return fecha;
     } else { // si es menos de las 8 pm retornar el mismo día
-        return ahora.toISOString().split('T')[0]; //transformar a Date de mysql
+        return ahora.toLocaleDateString('en-CA'); //transformar a Date de mysql
     }
+}
+
+export function fechaTitle() {
+    const fechaActual = getFechaEquipo();
+    const [year, month, day] = fechaActual.split('-'); //separar fechas
+
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+    //ajustar el indice del mes
+    const nombreMes = meses[parseInt(month, 10) -1];
+
+    return `${day} de ${nombreMes} del ${year}`;
+}
+
+export function calcSumaHoras (horaInicial, tiempoEstimado) {
+    const [h1, m1] = horaInicial.split(':').map(Number);
+    const [h2, m2] = tiempoEstimado.split(':').map(Number);
+
+    let minutosTotales = m1 + m2;
+    let horasTotales = h1 + h2 + Math.floor(minutosTotales / 60);
+    minutosTotales = minutosTotales % 60;
+
+    //formato
+    const hh = String(horasTotales).padStart(2, '0');
+    const mm = String(minutosTotales).padStart(2, '0');
+
+    return `${hh}:${mm}`;
 }
