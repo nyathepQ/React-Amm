@@ -138,17 +138,13 @@ function Header() {
                 <LogoPages onClick={() => handleNavegation ('/Inicio')} src={logo} alt="Logo ALF"/>
                 <ListPages>
                     <ul>
-                        {user?.id_tipoUsua !== 3 ? (
-                            <>
-                                {location.pathname !== '/Servicios' ? (<li><a href="#" onClick={() => handleNavegation('/Servicios')}>Agenda</a></li>) : (<ActualPage><a href="#">Agenda</a></ActualPage>)}
-                                {location.pathname !== '/Empleados' ? (<li><a href="#" onClick={() => handleNavegation('/Empleados')}>Empleados</a></li>) : (<ActualPage><a href="#">Empleados</a></ActualPage>)}
-                                {location.pathname !== '/Equipos' ? (<li><a href="#" onClick={() => handleNavegation('/Equipos')}>Equipos</a></li>) : (<ActualPage><a href="#">Equipos</a></ActualPage>)}
-                                {location.pathname !== '/Clientes' ? (<li><a href="#" onClick={() => handleNavegation('/Clientes')}>Clientes</a></li>) : (<ActualPage><a href="#">Clientes</a></ActualPage>)}
-                                {location.pathname !== '/Tipos' ? (<li><a href="#" onClick={() => handleNavegation('/Tipos')}>Tipos</a></li>) : (<ActualPage><a href="#">Tipos</a></ActualPage>)}
-                            </>
-                        ) : (
-                            <li><a href="#" onClick={() => handleNavegation('/ViewServicios')}>Lista de servicios asignados</a></li>
-                        )}
+                        <>
+                            {location.pathname !== '/Servicios' ? (<li><a href="#" onClick={() => handleNavegation('/Servicios')}>Agenda</a></li>) : (<ActualPage><a href="#">Agenda</a></ActualPage>)}
+                            {location.pathname !== '/Empleados' ? (<li><a href="#" onClick={() => handleNavegation('/Empleados')}>Empleados</a></li>) : (<ActualPage><a href="#">Empleados</a></ActualPage>)}
+                            {location.pathname !== '/Equipos' ? (<li><a href="#" onClick={() => handleNavegation('/Equipos')}>Equipos</a></li>) : (<ActualPage><a href="#">Equipos</a></ActualPage>)}
+                            {location.pathname !== '/Clientes' ? (<li><a href="#" onClick={() => handleNavegation('/Clientes')}>Clientes</a></li>) : (<ActualPage><a href="#">Clientes</a></ActualPage>)}
+                            {location.pathname !== '/Tipos' ? (<li><a href="#" onClick={() => handleNavegation('/Tipos')}>Tipos</a></li>) : (<ActualPage><a href="#">Tipos</a></ActualPage>)}
+                        </>                       
                     </ul>
                 </ListPages>
             </LogoList>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../components/UserContext";
 import { useNavigate } from "react-router-dom";
-import { getFechaHoraActual, calcSumaHoras } from '../utils/time';
+import { getFechaHoraActual, calcSumaHoras, formatearFecha } from '../utils/time';
 import ButtonActions from '../components/ButtonActions';
 import Header from '../components/Header';
 import axios from 'axios';
@@ -72,7 +72,7 @@ function Servicios() {
         setMensaje('');
         setError('');
 
-        if(!user || user.id_tipoUsua === 3){
+        if(!user){
             navigate('/');  
         }
 
@@ -159,12 +159,13 @@ function Servicios() {
                 
                 return {
                     ...serv,
+                    fecha: formatearFecha(serv.fecha),
                     nombre_cliente: cliente.nombre_cliente + ' ' + cliente.apellido_cliente,
                     nombre_equipo: equipo.nombre_equipo,
                     nombre_tipo_limpieza: tipoLimp.nombre_tipo
                 }
             });
-
+            
             setDatosModal(datosCompletos);
             setMostrarModal(true);
         } else if (botonPress === 'eliminar') {

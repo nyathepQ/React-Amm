@@ -12,21 +12,17 @@ export function getFechaHoraActual() {
     return `${año}-${mes}-${dia} ${horas}:${minutos}:${segundos}`;
 }
 
-export function getFechaEquipo() {
-    const ahora = new Date();
+export function formatearFecha(date) {
+    const fecha = new Date(date);
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
 
-    //comprobar si la hora es igual o mayor a las 8 pm
-    if(ahora.getHours() > 19) {
-        ahora.setDate(ahora.getDate() + 1); //sumar un día
-        const fecha = ahora.toLocaleDateString('en-CA'); //transformar a Date de mysql
-        return fecha;
-    } else { // si es menos de las 8 pm retornar el mismo día
-        return ahora.toLocaleDateString('en-CA'); //transformar a Date de mysql
-    }
+    return `${año}-${mes}-${dia}`;
 }
 
-export function fechaTitle() {
-    const fechaActual = getFechaEquipo();
+export function fechaTitle(date) {
+    const fechaActual = formatearFecha(date);
     const [year, month, day] = fechaActual.split('-'); //separar fechas
 
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

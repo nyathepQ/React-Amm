@@ -60,7 +60,7 @@ function Clientes() {
         setMensaje('');
         setError('');
 
-        if(!user || user.id_tipoUsua === 3){
+        if(!user){
             navigate('/');  
         }
 
@@ -187,7 +187,7 @@ function Clientes() {
                             name="nombre_cliente"
                             id="nombre_cliente"
                             value={nuevoClient.nombre_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, nombre_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, nombre_cliente: e.target.value.trimStart()}))}
                         />
                         <label htmlFor="apellido_cliente">Apellidos</label>
                         <input
@@ -195,7 +195,7 @@ function Clientes() {
                             name="apellido_cliente"
                             id="apellido_cliente"
                             value={nuevoClient.apellido_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, apellido_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, apellido_cliente: e.target.value.trimStart()}))}
                         />
                         <label htmlFor="direccion_cliente">Dirección</label>
                         <input
@@ -203,7 +203,7 @@ function Clientes() {
                             name="direccion_cliente"
                             id="direccion_cliente"
                             value={nuevoClient.direccion_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, direccion_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, direccion_cliente: e.target.value.trimStart()}))}
                         />
                         <label htmlFor="telefono_cliente">Telefono</label>
                         <input
@@ -211,7 +211,7 @@ function Clientes() {
                             name="telefono_cliente"
                             id="telefono_cliente"
                             value={nuevoClient.telefono_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, telefono_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, telefono_cliente: e.target.value.trimStart()}))}
                         />
                         <label htmlFor="correo_cliente">Correo electronico</label>
                         <input
@@ -219,7 +219,7 @@ function Clientes() {
                             name="correo_cliente"
                             id="correo_cliente"
                             value={nuevoClient.correo_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, correo_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, correo_cliente: e.target.value.trimStart()}))}
                         />
                         <label htmlFor="observacion_cliente">Observaciones</label>
                         <input
@@ -227,7 +227,7 @@ function Clientes() {
                             name="observacion_cliente"
                             id="observacion_cliente"
                             value={nuevoClient.observacion_cliente}
-                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, observacion_cliente: e.target.value}))}
+                            onChange={(e) => setNuevoClient(nuevoClient => ({ ...nuevoClient, observacion_cliente: e.target.value.trimStart()}))}
                         />
                     </div>
                     <ButtonActions/>

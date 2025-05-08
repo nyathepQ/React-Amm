@@ -41,12 +41,11 @@ function Empleados() {
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
 
-    const inicialStateForm = {id_usuario: 'NA', id_tipoUsua: 'NA', nombre_usuario: '', contrasena_usuario: '', id_tipoDocu: 'NA', documento_usuario: '', nombres: '', apellidos: '', telefono_usuario: '', correo_usuario: '', user_crea: '', user_modifica: '', modificado_el: ''};
+    const inicialStateForm = {id_empleado: 'NA', id_tipoDocu: 'NA', documento_empleado: '', nombre_empleado: '', apellido_empleado: '', telefono_empleado: '', correo_empleado: '', user_crea: '', user_modifica: '', modificado_el: ''};
 
-    const [usuarios, setUsuarios] = useState([]);
-    const [tiposUsuario, setTiposUsuario] = useState([]);
+    const [empleados, setEmpleados] = useState([]);
     const [tiposDocumento, setTiposDocumento] = useState([]);
-    const [nuevoUsuario, setNuevoUsuario] = useState(inicialStateForm);
+    const [nuevoEmpleado, setNuevoEmpleado] = useState(inicialStateForm);
     const [mostrarModal, setMostrarModal] = useState(false);
     const [datosModal, setDatosModal] = useState([]);
 
@@ -57,13 +56,11 @@ function Empleados() {
 
     const cargarDatos = async () => {
         try {
-            const [resUser, resTUs, resTDo] = await Promise.all([
-                axios.get('http://localhost:3001/usuarios'),
-                axios.get('http://localhost:3001/tipos/usuario'),
+            const [resEmp, resTDo] = await Promise.all([
+                axios.get('http://localhost:3001/empleados'),
                 axios.get('http://localhost:3001/tipos/documento')
             ]);
-            setUsuarios(resUser.data);
-            setTiposUsuario(resTUs.data);
+            setEmpleados(resEmp.data);
             setTiposDocumento(resTDo.data);
         } catch (error) {
             console.error('Error en la carga de datos ', error);
@@ -71,18 +68,15 @@ function Empleados() {
     }
 
     const createdId = (formulario) => { //función para crear id personalizado
-        if(formulario.id_tipoUsua.value === 'NA' || formulario.nombres.value === '' || formulario.apellidos.value === ''){
+        if(formulario.nombre_empleado.value === '' || formulario.apellido_empleado.value === ''){
             return '';
         }
 
-        const tipoUs = tiposUsuario.find(us => us.id_tipoUsua === parseInt(formulario.id_tipoUsua.value));
-        
-        const tpU = tipoUs.nombre_tipo.substring(0, 3).toUpperCase();
-        const nomb = formulario.nombres.value.substring(0, 2).toUpperCase();
-        const apell = formulario.apellidos.value.substring(0, 2).toUpperCase();
-        const aleatoriNumb = Math.floor(100000 + Math.random() * 900000);
+        const nomb = formulario.nombre_empleado.value.substring(0, 3).toUpperCase();
+        const apell = formulario.apellido_empleado.value.substring(0, 3).toUpperCase();
+        const aleatoriNumb = Math.floor(10000 + Math.random() * 90000);
 
-        return `${tpU}${nomb}${apell}${aleatoriNumb}`;
+        return `EMP-${nomb}${apell}${aleatoriNumb}`;
     }
 
     const handleUsuario = async (e) => {
@@ -90,40 +84,37 @@ function Empleados() {
         setMensaje('');
         setError('');
 
-        if(!user || user.id_tipoUsua === 3){
+        if(!user){
             navigate('/');  
         }
 
         const botonPress = e.nativeEvent.submitter.name;
         const form = e.target;
-        const idSeleccionado = form.id_usuario.value;
+        const idSeleccionado = form.id_empleado.value;
 
         if(botonPress === 'buscar') {
             if(idSeleccionado !== "NA"){
-                const usuarioEnc = usuarios.find(usua => usua.id_usuario === idSeleccionado);
+                const usuarioEnc = empleados.find(emp => emp.id_empleado === idSeleccionado);
 
                 if(usuarioEnc) {
-                    setNuevoUsuario({
-                        id_tipoUsua: usuarioEnc.id_tipoUsua,
-                        nombre_usuario: usuarioEnc.nombre_usuario,
-                        contrasena_usuario: usuarioEnc.contrasena_usuario,
+                    setNuevoEmpleado({
                         id_tipoDocu: usuarioEnc.id_tipoDocu,
-                        documento_usuario: usuarioEnc.documento_usuario,
-                        nombres: usuarioEnc.nombres,
-                        apellidos: usuarioEnc.apellidos,
-                        telefono_usuario: usuarioEnc.telefono_usuario,
-                        correo_usuario: usuarioEnc.correo_usuario
+                        documento_empleado: usuarioEnc.documento_empleado,
+                        nombre_empleado: usuarioEnc.nombre_empleado,
+                        apellido_empleado: usuarioEnc.apellido_empleado,
+                        telefono_empleado: usuarioEnc.telefono_empleado,
+                        correo_empleado: usuarioEnc.correo_empleado
                     });                    
                 };
             } else {
-                setMensaje('Código de usuario invalido para buscar');
+                setMensaje('Código de empleado invalido para buscar');
             }
         } else if (botonPress === 'crear/modificar') {
             if(idSeleccionado !== "NA"){
                 //modificar
                 const modFecha = getFechaHoraActual();
                 const datosActualizados = {
-                    ...nuevoUsuario,
+                    ...nuevoEmpleado,
                     user_modifica: user.nombre_usuario,
                     modificado_el: modFecha
                 };
@@ -132,11 +123,10 @@ function Empleados() {
                 const camposExcluidos = ['user_crea'];
                 const camposVacios = Object.entries(datosActualizados).filter(([clave, valor]) => !camposExcluidos.includes(clave) && (valor === '' || valor === 'NA'));
 
-                console.log(camposVacios.map(([clave]) => clave));
                 if(camposVacios.length > 0) {
                     setError(`Faltan datos válidos en uno o varios campos`);
                 } else {
-                    const response = await axios.post('http://localhost:3001/usuarios/update', datosActualizados);
+                    const response = await axios.post('http://localhost:3001/empleados/update', datosActualizados);
                     if (response.data.mensaje) {
                         setMensaje(response.data.mensaje);
                         cargarDatos(); //volver a cargar datos para actualizar                    
@@ -147,8 +137,8 @@ function Empleados() {
             } else {    
                 //crear
                 const datosActualizados = {
-                    ...nuevoUsuario,
-                    id_usuario: createdId(form),
+                    ...nuevoEmpleado,
+                    id_empleado: createdId(form),
                     user_crea: user.nombre_usuario
                 };
 
@@ -156,28 +146,25 @@ function Empleados() {
                 const camposExcluidos = ['id_usuario', 'user_modifica', 'modificado_el'];
                 const camposVacios = Object.entries(datosActualizados).filter(([clave, valor]) => !camposExcluidos.includes(clave) && (valor === '' || valor === 'NA'));
 
-                console.log(camposVacios.map(([clave]) => clave));
                 if(camposVacios.length > 0) {
                     setError(`Faltan datos válidos en uno o varios campos`);
                 } else {
-                    const response = await axios.post('http://localhost:3001/usuarios/insert', datosActualizados);
+                    const response = await axios.post('http://localhost:3001/empleados/insert', datosActualizados);
                     if (response.data.mensaje) {
                         setMensaje(response.data.mensaje);
                         cargarDatos(); //volver a cargar datos para actualizar
-                        setNuevoUsuario(prev => ({ ...prev, id_usuario: response.data.id}));
+                        setNuevoEmpleado(prev => ({ ...prev, id_empleado: response.data.id}));
                     } else if (response.data.error) {
                         setError(response.data.error);
                     }
                 }                
             }
         } else if (botonPress === 'mostrar') {
-            const datosCompletos = usuarios.filter(us => us.id_usuario !== 'NA').map(us => {
-                const tipoUsua = tiposUsuario.find(u => u.id_tipoUsua === us.id_tipoUsua);
-                const tipoDocu = tiposDocumento.find(u => u.id_tipoDocu === us.id_tipoDocu);
+            const datosCompletos = empleados.filter(emp => emp.id_empleado !== 'NA').map(emp => {
+                const tipoDocu = tiposDocumento.find(u => u.id_tipoDocu === emp.id_tipoDocu);
                 
                 return {
-                    ...us,
-                    nombre_tipo_usuario: tipoUsua.nombre_tipo,
+                    ...emp,
                     nombre_tipo_documento: tipoDocu.nombre_tipo
                 }
             });
@@ -186,15 +173,15 @@ function Empleados() {
             setMostrarModal(true);
         } else if (botonPress === 'eliminar') {
             if(idSeleccionado === 'NA') {
-                setMensaje('Código de usuario invalido para eliminar');
+                setMensaje('Código de empleado invalido para eliminar');
             } else {
-                const response = await axios.post('http://localhost:3001/usuarios/delete', {
-                    id_usuario: idSeleccionado
+                const response = await axios.post('http://localhost:3001/empleados/delete', {
+                    id_empleado: idSeleccionado
                 });
                 if(response.data.mensaje) {
                     setMensaje(response.data.mensaje);
                     cargarDatos(); //volver a cargar datos para actualizar
-                    setNuevoUsuario(inicialStateForm); //reinicia formulario 
+                    setNuevoEmpleado(inicialStateForm); //reinicia formulario 
                 } else if (response.data.error) {
                     setError(response.data.error);
                 }
@@ -212,53 +199,25 @@ function Empleados() {
                 {mensaje && <Mensaje tipo="mensaje">{mensaje}</Mensaje>}
                 <form className="form_pages" onSubmit={handleUsuario}>
                     <div className="form_display">
-                        <label htmlFor="id_usuario">Código</label>
+                        <label htmlFor="id_empleado">Código</label>
                         <select 
-                            name="id_usuario"
-                            id="id_usuario"
-                            value={nuevoUsuario.id_usuario}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, id_usuario: e.target.value}))}
+                            name="id_empleado"
+                            id="id_empleado"
+                            value={nuevoEmpleado.id_empleado}
+                            onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, id_empleado: e.target.value}))}
                         >
                             <option key="NA" value="NA">Nuevo registro</option>
-                            {usuarios.map(us => (
-                                us.id_usuario !== 'NA' ? (<option key={us.id_usuario} value={us.id_usuario}>{us.id_usuario}</option>) : ''
+                            {empleados.map(emp => (
+                                emp.id_empleado !== 'NA' ? (<option key={emp.id_empleado} value={emp.id_empleado}>{emp.id_empleado}</option>) : ''
                             ))}
                         </select>
-                        <label htmlFor="id_tipoUsua">Tipo de usuario</label>
-                        <select 
-                            name="id_tipoUsua"
-                            id="id_tipoUsua"
-                            value={nuevoUsuario.id_tipoUsua}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, id_tipoUsua: e.target.value}))}
-                        >
-                            <option key="NA" value="NA">Seleccionar registro</option>
-                            {tiposUsuario.map(tUsu => (
-                                tUsu.id_tipoUsua !== 'NA' ? (<option key={tUsu.id_tipoUsua} value={tUsu.id_tipoUsua}>{tUsu.nombre_tipo}</option>) : ''
-                            ))}
-                        </select>
-                        <label htmlFor="nombre_usuario">Nombre usuario</label>
-                        <input
-                            type="text"
-                            name="nombre_usuario"
-                            id="nombre_usuario"
-                            value={nuevoUsuario.nombre_usuario}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, nombre_usuario: e.target.value}))}
-                        />
-                        <label htmlFor="contrasena_usuario">Contraseña</label>
-                        <input
-                            type="text"
-                            name="contrasena_usuario"
-                            id="contrasena_usuario"
-                            value={nuevoUsuario.contrasena_usuario}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, contrasena_usuario: e.target.value}))}
-                        />
                         <label htmlFor="id_tipoDocu">Documento</label>
                         <DivIdentificacion>
                             <select 
                                 name="id_tipoDocu"
                                 id="id_tipoDocu"
-                                value={nuevoUsuario.id_tipoDocu}
-                                onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, id_tipoDocu: e.target.value}))}
+                                value={nuevoEmpleado.id_tipoDocu}
+                                onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, id_tipoDocu: e.target.value}))}
                             >
                                 <option key="NA" value="NA">Seleccionar registro</option>
                                 {tiposDocumento.map(tDoc => (
@@ -267,43 +226,43 @@ function Empleados() {
                             </select>
                             <input
                                 type="text"
-                                name="documento_usuario"
-                                id="documento_usuario"
-                                value={nuevoUsuario.documento_usuario}
-                                onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, documento_usuario: e.target.value}))}
+                                name="documento_empleado"
+                                id="documento_empleado"
+                                value={nuevoEmpleado.documento_empleado}
+                                onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, documento_empleado: e.target.value.trimStart()}))}
                             />
                         </DivIdentificacion>
-                        <label htmlFor="nombres">Nombres</label>
+                        <label htmlFor="nombre_empleado">Nombres</label>
                         <input
                             type="text"
-                            name="nombres"
-                            id="nombres"
-                            value={nuevoUsuario.nombres}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, nombres: e.target.value}))}
+                            name="nombre_empleado"
+                            id="nombre_empleado"
+                            value={nuevoEmpleado.nombre_empleado}
+                            onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, nombre_empleado: e.target.value.trimStart()}))}
                         />
-                        <label htmlFor="apellidos">Apellidos</label>
+                        <label htmlFor="apellido_empleado">Apellidos</label>
                         <input
                             type="text"
-                            name="apellidos"
-                            id="apellidos"
-                            value={nuevoUsuario.apellidos}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, apellidos: e.target.value}))}
+                            name="apellido_empleado"
+                            id="apellido_empleado"
+                            value={nuevoEmpleado.apellido_empleado}
+                            onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, apellido_empleado: e.target.value.trimStart()}))}
                         />
-                        <label htmlFor="telefono_usuario">Telefono</label>
+                        <label htmlFor="telefono_empleado">Telefono</label>
                         <input
                             type="text"
-                            name="telefono_usuario"
-                            id="telefono_usuario"
-                            value={nuevoUsuario.telefono_usuario}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, telefono_usuario: e.target.value}))}
+                            name="telefono_empleado"
+                            id="telefono_empleado"
+                            value={nuevoEmpleado.telefono_empleado}
+                            onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, telefono_empleado: e.target.value.trimStart()}))}
                         />
-                        <label htmlFor="correo_usuario">Correo electronico</label>
+                        <label htmlFor="correo_empleado">Correo electronico</label>
                         <input
                             type="email"
-                            name="correo_usuario"
-                            id="correo_usuario"
-                            value={nuevoUsuario.correo_usuario}
-                            onChange={(e) => setNuevoUsuario(nuevoUsuario => ({ ...nuevoUsuario, correo_usuario: e.target.value}))}
+                            name="correo_empleado"
+                            id="correo_empleado"
+                            value={nuevoEmpleado.correo_empleado}
+                            onChange={(e) => setNuevoEmpleado(nuevoEmpleado => ({ ...nuevoEmpleado, correo_empleado: e.target.value.trimStart()}))}
                         />
                     </div>
                     <ButtonActions/>
@@ -314,22 +273,19 @@ function Empleados() {
                     onClose={() => setMostrarModal(false)}
                     datos={datosModal}
                     columnas={[
-                        {label: 'Código', field:'id_usuario'}, 
-                        {label: 'Tipo de usuario', field: 'nombre_tipo_usuario'},
-                        {label: 'Nombre usuario', field: 'nombre_usuario'},
-                        {label: 'Contraseña', field: 'contrasena_usuario'},
+                        {label: 'Código', field:'id_empleado'}, 
                         {label: 'Tipo de documento', field: 'nombre_tipo_documento'},
-                        {label: 'Documento', field: 'documento_usuario'},
-                        {label: 'Nombres', field: 'nombres'},
-                        {label: 'Apellidos', field: 'apellidos'},
-                        {label: 'Telefono', field: 'telefono_usuario'},
-                        {label: 'Correo', field: 'correo_usuario'},
+                        {label: 'Documento', field: 'documento_empleado'},
+                        {label: 'Nombres', field: 'nombre_empleado'},
+                        {label: 'Apellidos', field: 'apellido_empleado'},
+                        {label: 'Telefono', field: 'telefono_empleado'},
+                        {label: 'Correo', field: 'correo_empleado'},
                         {label: 'Creador', field: 'user_crea'},
                         {label: 'Fecha creación', field: 'creado_el'},
                         {label: 'Modificador', field: 'user_modifica'},
                         {label: 'Fecha modificación', field: 'modificado_el'}
                     ]}
-                    title="Usuarios"
+                    title="Empleados"
                 />
             )}
         </PagesDiv>

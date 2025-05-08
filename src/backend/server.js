@@ -1,8 +1,10 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const dotenv = require('dotenv');
 
 const app = express();
+dotenv.config();
 app.use(cors());
 app.use(express.json());
 
@@ -26,7 +28,7 @@ app.post('/login',(req, res) => {
     const {user, pass} = req.body;
 
     //comprobar si existe el usuario en la base de datos
-    const query = 'SELECT * FROM usuario WHERE nombre_usuario = ? and contrasena_usuario = ?'
+    const query = 'SELECT * FROM usuario WHERE nombre_usuario = ? and contrasena = ?'
     db.query(query, [user, pass], (err, results) => {
         if(err) {
             console.error(err);
@@ -40,6 +42,37 @@ app.post('/login',(req, res) => {
             return res.status(401).json({ error: 'Usuario o contrase incorrectos'})
         }
     });
+});
+
+// === Registrar ===
+app.post('/register',(req, res) => {
+    const {nombre_usuario, contrasena, token} = req.body;
+
+    if(process.env.TOKEN === token){
+        //comprobar si existe el usuario en la base de datos
+        const query = 'SELECT * FROM usuario WHERE nombre_usuario = ?'
+        db.query(query, [nombre_usuario], (err, results) => {
+            if(err) {
+                return res.status(500).send('Error en la base de datos');
+            }
+            //si se encuentra el usuario
+            if(results.length > 0){
+                return res.status(200).json({ mensaje: 'Usuario ya existe'});
+            } else {
+                const queryCreate = 'INSERT INTO usuario (nombre_usuario, contrasena) VALUES (?,?)';
+                db.query(queryCreate, [nombre_usuario, contrasena], (err, results) => {
+                    if(err){
+                        console.error(err);
+                        return res.status(500).send('Error en la base de datos');
+                    }
+
+                    return res.status(200).json({ mensaje: `Usuario ${nombre_usuario} creado con exito`});
+                });
+            }
+        });
+    } else {
+        return res.status(400).json({ mensaje: 'Token faltante o incorrecto' });
+    };    
 });
 
 // === Tipo documento ===
@@ -84,11 +117,9 @@ app.post('/tipos/documento/update', (req, res) => {
             console.error('Error al actualizar: ', err);
             return res.status(500).json({ error: 'Error en la base de datos'})
         }
-
         if (result.affectedRows == 0){
             return res.status(404).json({ mensaje: 'Tipo de documento no encontrado'});
         }
-
         return res.status(200).json({ mensaje: 'Tipo de documento con código ' + id_tipoDocu + ' actualizado'});
     });
 });
@@ -188,15 +219,6 @@ app.post('/tipos/limpieza/delete', (req, res) => {
     });
 });
 
-// === Tipo usuario ===
-// -- Obtener todos los registros --
-app.get('/tipos/usuario', (req, res) => {
-    db.query('SELECT * FROM tipo_usuario', (err, results) => {
-        if(err) return res.status(500).json({ error: 'Error al recolectar tipos de usuario'});
-        res.json(results);
-    });
-});
-
 // === Clientes ===
 // -- Obtener todos los registros --
 app.get('/clientes' , (req, res) => {
@@ -208,7 +230,6 @@ app.get('/clientes' , (req, res) => {
 
 // -- Insertar nuevo --
 app.post('/clientes/insert', (req, res) => {
-    console.log(req.body);
     const camposRequeridos = ['nombre_cliente', 'apellido_cliente', 'direccion_cliente', 'telefono_cliente', 'correo_cliente', 'user_crea'];
     const { nombre_cliente, apellido_cliente, direccion_cliente, telefono_cliente, correo_cliente, observacion_cliente, user_crea } = req.body;
 
@@ -286,9 +307,9 @@ app.get('/equipos' , (req, res) => {
     });
 });
 
-// -- Obtener usuarios equipo --
-app.get('/equipos/usuarios', (req, res) => {
-    db.query('SELECT * FROM usuarios_equipo', (err, results) => {
+// -- Obtener empleados equipo --
+app.get('/equipos/empleados', (req, res) => {
+    db.query('SELECT * FROM empleados_equipo', (err, results) => {
         if(err) return res.status(500).json({error: 'Error al recolectar equipos'})
         res.json(results);
     });
@@ -297,16 +318,16 @@ app.get('/equipos/usuarios', (req, res) => {
 // -- Insertar nuevo --
 app.post('/equipos/insert', (req, res) => {
     const camposRequeridos = ['nombre_equipo', 'lider', 'miembro1', 'miembro2', 'user_crea'];
-    const { nombre_equipo, lider, miembro1, miembro2, user_crea } = req.body;
-
     for(const campo of camposRequeridos){
         if(!req.body[campo]) {
             return res.status(400).json({ error: `Para crear faltan datos en el campo ${campo}`});
         }
     }
 
+    const { nombre_equipo, lider, miembro1, miembro2, user_crea } = req.body;
+
     const queryEquipo = 'INSERT INTO equipo (nombre_equipo, user_crea) VALUES (?,?)';
-    const queryUsuEqu = 'INSERT INTO usuarios_equipo (id_equipo, id_usuario, rol) VALUES (?, ?, ?)'
+    const queryUsuEqu = 'INSERT INTO empleados_equipo (id_equipo, id_empleado, rol) VALUES (?, ?, ?)'
     db.query(queryEquipo, [nombre_equipo, user_crea], (err, result) => {
         if (err) {
             console.error('Error al insertar: ', err);
@@ -317,9 +338,9 @@ app.post('/equipos/insert', (req, res) => {
         const miembros = [lider, miembro1, miembro2];
         const roles = ['lider', 'miembro1', 'miembro2'];
 
-        const inserts = miembros.map((id_usuario, index) => {
+        const inserts = miembros.map((id_empleado, index) => {
             return new Promise((resolve, reject) => {
-                db.query(queryUsuEqu, [idEquipo, id_usuario, roles[index]], (err, result) => {
+                db.query(queryUsuEqu, [idEquipo, id_empleado, roles[index]], (err, result) => {
                     if(err) {
                         return reject(err);
                     }
@@ -343,16 +364,16 @@ app.post('/equipos/insert', (req, res) => {
 // -- Modificar datos --
 app.post('/equipos/update', (req, res) => {
     const camposRequeridos = ['id_equipo', 'nombre_equipo', 'lider', 'miembro1', 'miembro2', 'user_modifica', 'modificado_el'];
-    const { id_equipo, nombre_equipo, lider, miembro1, miembro2, user_modifica, modificado_el } = req.body;
-
     for(const campo of camposRequeridos){
         if(!req.body[campo]) {
             return res.status(400).json({ error: `Para modificar faltan datos en el campo ${campo}`});
         }
     }
 
+    const { id_equipo, nombre_equipo, lider, miembro1, miembro2, user_modifica, modificado_el } = req.body;
+
     const queryEquipo = 'UPDATE equipo SET nombre_equipo = ?, user_modifica = ?, modificado_el = ? WHERE id_equipo = ?';
-    const queryUseEqu = 'UPDATE usuarios_equipo SET id_usuario = ? WHERE id_equipo = ? AND rol = ?';
+    const queryUseEqu = 'UPDATE empleados_equipo SET id_empleado = ? WHERE id_equipo = ? AND rol = ?';
     db.query(queryEquipo, [nombre_equipo, user_modifica, modificado_el, id_equipo], (err, result) => {
         if (err) {
             console.error('Error al insertar: ', err);
@@ -362,9 +383,9 @@ app.post('/equipos/update', (req, res) => {
         const roles = ['lider', 'miembro1', 'miembro2'];
         const miembros = [lider, miembro1, miembro2];
 
-        const updates = miembros.map((id_usuario, index) => {
+        const updates = miembros.map((id_empleado, index) => {
             return new Promise((resolve, reject) => {
-                db.query(queryUseEqu, [id_usuario, id_equipo, roles[index]], (err, result) => {
+                db.query(queryUseEqu, [id_empleado, id_equipo, roles[index]], (err, result) => {
                     if(err) {
                         return reject(err);
                     }
@@ -393,13 +414,13 @@ app.post('/equipos/delete', (req, res) => {
         return res.status(400).json({error: 'Faltan datos para eliminar'})
     }
 
-    const queryUsEq = 'DELETE FROM usuarios_equipo WHERE id_equipo = ?';
+    const queryUsEq = 'DELETE FROM empleados_equipo WHERE id_equipo = ?';
     const queryEquipo = 'DELETE FROM equipo WHERE id_equipo = ?';
 
-    //eliminar registros de usuarios_equipo
+    //eliminar registros de empleados_equipo
     db.query(queryUsEq, [id_equipo], (err, resultUsEq) => {
         if (err) {
-            console.error('Error al eliminar en usuarios_equipo: ', err);
+            console.error('Error al eliminar en empleados_equipo: ', err);
             return res.status(500).json({error: 'Error al eliminar miembros del equipo'});
         }
 
@@ -419,83 +440,82 @@ app.post('/equipos/delete', (req, res) => {
     });    
 });
 
-// === Usuarios ===
+// === Empleados ===
 // -- Obtener todos los registros --
-app.get('/usuarios' , (req, res) => {
-    db.query('SELECT * FROM usuario', (err, results) => {
-        if(err) return res.status(500).json({error: 'Error al recolectar usuarios'});
+app.get('/empleados' , (req, res) => {
+    db.query('SELECT * FROM empleado', (err, results) => {
+        if(err) return res.status(500).json({error: 'Error al recolectar empleados'});
         res.json(results);
     });
 });
 
 // -- Insertar nuevo --
-app.post('/usuarios/insert', (req, res) => {
-    const camposRequeridos = ['id_usuario', 'id_tipoUsua', 'nombre_usuario', 'contrasena_usuario', 'id_tipoDocu', 'documento_usuario', 'nombres', 'apellidos', 'telefono_usuario', 'correo_usuario', 'user_crea'];
-    const { id_usuario, id_tipoUsua, nombre_usuario, contrasena_usuario, id_tipoDocu, documento_usuario, nombres, apellidos, telefono_usuario, correo_usuario, user_crea } = req.body;
-
+app.post('/empleados/insert', (req, res) => {
+    const camposRequeridos = ['id_empleado', 'id_tipoDocu', 'documento_empleado', 'nombre_empleado', 'apellido_empleado', 'telefono_empleado', 'correo_empleado', 'user_crea'];
     for(const campo of camposRequeridos){
         if(!req.body[campo]) {
             return res.status(400).json({ error: `Para crear faltan datos en el campo ${campo}`});
         }
     }
 
-    const query = 'INSERT INTO usuario (id_usuario, id_tipoUsua, nombre_usuario, contrasena_usuario, id_tipoDocu, documento_usuario, nombres, apellidos, telefono_usuario, correo_usuario, user_crea) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
-    db.query(query, [id_usuario, id_tipoUsua, nombre_usuario, contrasena_usuario, id_tipoDocu, documento_usuario, nombres, apellidos, telefono_usuario, correo_usuario, user_crea], (err, result) => {
+    const { id_empleado, id_tipoDocu, documento_empleado, nombre_empleado, apellido_empleado, telefono_empleado, correo_empleado, user_crea } = req.body;
+
+    const query = 'INSERT INTO empleado (id_empleado, id_tipoDocu, documento_empleado, nombre_empleado, apellido_empleado, telefono_empleado, correo_empleado, user_crea) VALUES (?,?,?,?,?,?,?,?)';
+    db.query(query, [id_empleado, id_tipoDocu, documento_empleado, nombre_empleado, apellido_empleado, telefono_empleado, correo_empleado, user_crea], (err, result) => {
         if (err) {
             console.error('Error al insertar: ', err);
             return res.status(500).json({error: 'Error en la base de datos'});
         }
 
-        return res.status(201).json({mensaje: 'Usuario creado con exito: ' + id_usuario, id: id_usuario});
+        return res.status(201).json({mensaje: 'Empleado creado con exito: ' + id_empleado, id: id_empleado});
     });
 });
 
 // -- Modificar datos --
-app.post('/usuarios/update', (req, res) => {
-    const camposRequeridos = ['id_usuario', 'id_tipoUsua', 'nombre_usuario', 'contrasena_usuario', 'id_tipoDocu', 'documento_usuario', 'nombres', 'apellidos', 'telefono_usuario', 'correo_usuario', 'user_modifica', 'modificado_el'];
-    const { id_usuario, id_tipoUsua, nombre_usuario, contrasena_usuario, id_tipoDocu, documento_usuario, nombres, apellidos, telefono_usuario, correo_usuario, user_modifica, modificado_el } = req.body;
-
+app.post('/empleados/update', (req, res) => {
+    const camposRequeridos = ['id_empleado', 'id_tipoDocu', 'documento_empleado', 'nombre_empleado', 'apellido_empleado', 'telefono_empleado', 'correo_empleado', 'user_modifica', 'modificado_el'];
     for(const campo of camposRequeridos){
         if(!req.body[campo]) {
             return res.status(400).json({ error: `Para modificar faltan datos en el campo ${campo}`});
         }
     }
 
-    const query = 'UPDATE usuario SET id_tipoUsua = ?, nombre_usuario = ?, contrasena_usuario = ?, id_tipoDocu = ?, documento_usuario = ?, nombres = ?, apellidos = ?, telefono_usuario = ?, correo_usuario = ?, user_modifica = ?, modificado_el = ? WHERE id_usuario = ?';
-    db.query(query, [id_tipoUsua, nombre_usuario, contrasena_usuario, id_tipoDocu, documento_usuario, nombres, apellidos, telefono_usuario, correo_usuario, user_modifica, modificado_el, id_usuario], (err, result) => {
+    const { id_empleado, id_tipoDocu, documento_empleado, nombre_empleado, apellido_empleado, telefono_empleado, correo_empleado, user_modifica, modificado_el } = req.body;
+
+    const query = 'UPDATE empleado SET id_tipoDocu = ?, documento_empleado = ?, nombre_empleado = ?, apellido_empleado = ?, telefono_empleado = ?, correo_empleado = ?, user_modifica = ?, modificado_el = ? WHERE id_empleado = ?';
+    db.query(query, [id_tipoDocu, documento_empleado, nombre_empleado, apellido_empleado, telefono_empleado, correo_empleado, user_modifica, modificado_el, id_empleado], (err, result) => {
         if (err) {
             console.error('Error al actualizar: ', err);
             return res.status(500).json({ error: 'Error en la base de datos'})
         }
 
         if (result.affectedRows == 0){
-            return res.status(404).json({ mensaje: 'Usuario no encontrado'});
+            return res.status(404).json({ mensaje: 'Empleado no encontrado'});
         }
 
-        return res.status(200).json({ mensaje: 'Usuario con código ' + id_usuario + ' actualizado'});
+        return res.status(200).json({ mensaje: 'Empleado con código ' + id_empleado + ' actualizado'});
     });
 });
 
 // -- Eliminar datos --
-app.post('/usuarios/delete', (req, res) => {
-    const { id_usuario } = req.body;
+app.post('/empleados/delete', (req, res) => {
+    const { id_empleado } = req.body;
 
-    if(!id_usuario) {
+    if(!id_empleado) {
         return res.status(400).json({error: 'Faltan datos para eliminar'})
     }
 
-    const query = 'DELETE FROM usuario WHERE id_usuario = ?';
-    db.query(query, [id_usuario], (err, result) => {
+    const query = 'DELETE FROM empleado WHERE id_empleado = ?';
+    db.query(query, [id_empleado], (err, result) => {
         if(err) {
             console.error('Error al eliminar: ', err);
             return res.status(500).json({error: 'Error en la base de datos'})
         }
         if(result.affectedRows == 0){
-            console.log(typeof(id_usuario));
-            return res.status(404).json({mensaje: 'Usuario no encontrado'})
+            return res.status(404).json({mensaje: 'Empleado no encontrado'})
         }
 
-        return res.status(200).json({mensaje: 'Usuario con código ' + id_usuario + ' eliminado'});
+        return res.status(200).json({mensaje: 'Empleado con código ' + id_empleado + ' eliminado'});
     });
 });
 
@@ -509,20 +529,10 @@ app.get('/servicios' , (req, res) => {
 });
 
 // -- Obtener registros por fecha --
-app.get('/servicios/fecha', (req, res) => {
-    const { fecha } = req.body;
+app.get('/servicios/:fecha', (req, res) => {
+    const fecha = req.params.fecha;
     const query = 'SELECT * FROM servicio WHERE fecha = ?';
     db.query(query, [fecha] , (err, results) => {
-        if (err) return res.status(500).json({error: 'Error al recolectar servicios'});
-        res.json(results);
-    });
-});
-
-// -- Obtener registros por fecha y equipo --
-app.post('/servicios/equipofecha', (req, res) => {
-    const { fecha, id_equipo } = req.body;
-    const query = 'SELECT * FROM servicio WHERE fecha = ? AND id_equipo = ?';
-    db.query(query, [fecha, id_equipo] , (err, results) => {
         if (err) return res.status(500).json({error: 'Error al recolectar servicios'});
         res.json(results);
     });

@@ -18,12 +18,6 @@ const PagesDiv = styled.div`
     align-items: center;
 `;
 
-const FormTipoUsuario = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-`;
-
 const Mensaje = styled.p`
     color: ${props => (props.tipo === 'error' ? 'violet' : 'black')};
     text-align: center;
@@ -43,13 +37,14 @@ function Tipos() {
     
     const [tiposDocumento, setTiposDocumento] = useState([]);
     const [tiposLimpieza, setTiposLimpieza] = useState([]);
-    const [tiposUsuario, setTiposUsuario] = useState([]);
 
-    const [nuevoDoc, setNuevoDoc] = useState({ id_tipoDocu: '', nombre_tipo: '', user_modifica: '', modificado_el: ''});
-    const [nuevaLimp, setNuevaLimp] = useState({id_tipoLimp: '', nombre_tipo: '', user_modifica: '', modificado_el: ''});
+    const defStatusNuevoDoc = { id_tipoDocu: 'NA', nombre_tipo: '', user_crea: '', user_modifica: '', modificado_el: '' };
+    const defStatusNuevaLimp = { id_tipoLimp: 'NA', nombre_tipo: '', user_crea: '', user_modifica: '', modificado_el: '' };
+
+    const [nuevoDoc, setNuevoDoc] = useState(defStatusNuevoDoc);
+    const [nuevaLimp, setNuevaLimp] = useState(defStatusNuevaLimp);
     const [mostrarModalDoc, setMostrarModalDoc] = useState(false);
     const [mostrarModalLimp, setMostrarModalLimp] = useState(false);
-    const [mostrarModalTUs, setMostrarModalTUs] = useState(false);
 
     // cargar datos
     useEffect(() => {
@@ -58,14 +53,12 @@ function Tipos() {
 
     const cargarDatos = async () => {
         try {
-            const [resDoc, resLimp, resUsua] = await Promise.all([
+            const [resDoc, resLimp] = await Promise.all([
                 axios.get('http://localhost:3001/tipos/documento'),
-                axios.get('http://localhost:3001/tipos/limpieza'),
-                axios.get('http://localhost:3001/tipos/usuario')
+                axios.get('http://localhost:3001/tipos/limpieza')
             ]);
             setTiposDocumento(resDoc.data);
             setTiposLimpieza(resLimp.data);
-            setTiposUsuario(resUsua.data);
         } catch (error) {
             console.error('Error en la carga de datos: ', error);
         }
@@ -76,7 +69,7 @@ function Tipos() {
         setError('');
         setMensaje('');
         
-        if(!user || user.id_tipoUsua === 3){
+        if(!user){
             navigate('/');  
         }
 
@@ -121,11 +114,10 @@ function Tipos() {
                 }
             } else {    
                 //crear
-
                 // -- Varificar que ningun campo necesario este vacio --
                 if(nuevoDoc.nombre_tipo === ''){
                     return setError('El campo nombre no puede estar vacio');
-                };                
+                };
 
                 const response = await axios.post('http://localhost:3001/tipos/documento/insert', {
                     nombre_tipo: nuevoDoc.nombre_tipo,
@@ -152,7 +144,7 @@ function Tipos() {
                 if(response.data.mensaje) {
                     setMensaje(response.data.mensaje);
                     cargarDatos(); //volver a cargar datos para actualizar
-                    setNuevoDoc({ id_tipoDocu: 'NA', nombre_tipo: '', user_modifica: '', modificado_el: '' }); //reinicia formulario 
+                    setNuevoDoc(defStatusNuevoDoc); //reinicia formulario 
                 } else if (response.data.error) {
                     setError(response.data.error);
                 }
@@ -165,7 +157,7 @@ function Tipos() {
         setError('');
         setMensaje('');
 
-        if(!user || user.id_tipoUsua === 3){
+        if(!user){
             navigate('/');
         }
 
@@ -210,7 +202,6 @@ function Tipos() {
                 }
             } else {    
                 //crear
-
                 // -- Varificar que ningun campo necesario este vacio --
                 if(nuevaLimp.nombre_tipo === ''){
                     return setError('El campo nombre no puede estar vacio');
@@ -240,26 +231,13 @@ function Tipos() {
                 if(response.data.mensaje) {
                     setMensaje(response.data.mensaje);
                     cargarDatos(); //volver a cargar datos para actualizar
-                    setNuevaLimp({ id_tipoLimp: 'NA', nombre_tipo: '', user_modifica: '', modificado_el: '' }); //reinicia formulario 
+                    setNuevaLimp(defStatusNuevaLimp); //reinicia formulario 
                 } else if (response.data.error) {
                     setError(response.data.error);
                 }
             }
         }
     };
-
-    const handleTipoUsua = async (e) => {
-        e.preventDefault();
-        setError('');
-        setMensaje('');
-
-        const botonPress = e.nativeEvent.submitter.name;
-
-        if(botonPress === 'mostrar') {
-            setMostrarModalTUs(true);
-        }
-    }
-
 
     return(<>
         <GlobalStyles/>
@@ -292,7 +270,7 @@ function Tipos() {
                             name="nombre_tipo"
                             id="nombre_tipo"
                             value={nuevoDoc.nombre_tipo}
-                            onChange={(e) => setNuevoDoc(nuevoDoc => ({ ...nuevoDoc, nombre_tipo: e.target.value}))}
+                            onChange={(e) => setNuevoDoc(nuevoDoc => ({ ...nuevoDoc, nombre_tipo: e.target.value.trim()}))}
                         />
                     </div>
                     <ButtonActions/>
@@ -322,20 +300,12 @@ function Tipos() {
                             name="nombre_tipo"
                             id="nombre_tipo"
                             value={nuevaLimp.nombre_tipo}
-                            onChange={(e) => setNuevaLimp(nuevaLimp => ({ ...nuevaLimp, nombre_tipo: e.target.value}))}
+                            onChange={(e) => setNuevaLimp(nuevaLimp => ({ ...nuevaLimp, nombre_tipo: e.target.value.trim()}))}
                         />
                     </div>
                     <ButtonActions/>                    
                 </form>
             </div>
-            <FormTipoUsuario>
-                <form className="form_pages" onSubmit={handleTipoUsua}>
-                    <h2>Tipo de Usuario</h2>
-                    <div>
-                        <button key="mostrar" type="submit" name="mostrar">Mostrar registros</button>
-                    </div>
-                </form>
-            </FormTipoUsuario>
             {mostrarModalDoc && (
                 <ModalTable
                     onClose={() => setMostrarModalDoc(false)}
@@ -364,21 +334,6 @@ function Tipos() {
                         {label: 'Fecha modificación', field: 'modificado_el'}
                     ]}
                     title="Tipos de Limpieza"
-                />
-            )}
-            {mostrarModalTUs && (
-                <ModalTable
-                    onClose={() => setMostrarModalTUs(false)}
-                    datos={tiposUsuario}
-                    columnas={[
-                        {label: 'Código', field:'id_tipoUsua'}, 
-                        {label: 'Nombre', field: 'nombre_tipo'},
-                        {label: 'Creador', field: 'user_crea'},
-                        {label: 'Fecha creación', field: 'creado_el'},
-                        {label: 'Modificador', field: 'user_modifica'},
-                        {label: 'Fecha modificación', field: 'modificado_el'}
-                    ]}
-                    title="Tipos de Usuario"
                 />
             )}
         </PagesDiv>

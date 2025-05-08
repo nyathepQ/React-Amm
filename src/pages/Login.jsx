@@ -5,6 +5,7 @@ import axios from 'axios';
 import styled from 'styled-components';
 import GlobalStyles from '../styles/GlobalStyles';
 import logo from '../img/Logo.jpeg';
+import ModalRegister from '../components/ModelRegister';
 
 const MainLogin = styled.main`
     flex: 1;
@@ -12,7 +13,14 @@ const MainLogin = styled.main`
 
 const HeaderQuestion = styled.header`
     text-align: right;
+    aling-items: center;
     margin: -20px;
+
+    a {
+    text-decoration: none;
+    align-self: top;
+    color: black;
+    }
 `;
 
 const DivLoginLogo = styled.div`
@@ -93,6 +101,7 @@ function Login() {
     const [pass, setPass] = useState('');
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
+    const [mostrarModal, setMostrarModal] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -104,7 +113,6 @@ function Login() {
 
             if(response && response.data){
                 setMensaje(response.data.mensaje);
-
                 //guardar usuario en UserContext
                 setUserContext(response.data.user);
                 //redirigir
@@ -124,8 +132,8 @@ function Login() {
         <GlobalStyles/>
         <MainLogin>
             <HeaderQuestion>
-                <a href="https://wa.me/573212300716" target="_blank" rel="noopener noreferrer">
-                    <i className="fa-solid fa-circle-question fa-3x" style={{color: "black"}}></i>
+                <a href="#" onClick={() => setMostrarModal(true)} rel="noopener noreferrer">
+                    Registro<i className="fa-solid fa-circle-question fa-3x" style={{color: "black"}}></i>
                 </a>
             </HeaderQuestion>
             <DivLoginLogo>
@@ -164,6 +172,11 @@ function Login() {
                 <i className="fa-brands fa-facebook fa-5x"></i>
             </IconLink>
         </FooterLogin>
+        {mostrarModal && (
+            <ModalRegister
+                onClose={() => setMostrarModal(false)}
+            />
+        )}
     </>
     );
 };
